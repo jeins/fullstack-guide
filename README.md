@@ -71,8 +71,14 @@ api-guide/
 │   └── diagrams/                    # Diagram arsitektur SVG
 ├── src/
 │   ├── App.jsx                      # UI, navigasi, dan materi utama
-│   ├── coreSystemDesignConcepts.js  # Materi System Design Core
+│   ├── coreSystemDesignConcepts.js  # Aggregator materi System Design Core
 │   ├── coreSystemDesignDiagrams.js  # Mapping materi ke diagram
+│   ├── system-design-core/           # Materi core, dikelompokkan per domain
+│   │   ├── deliveryAndRetrieval.js
+│   │   ├── distributedData.js
+│   │   ├── foundationsAndScale.js
+│   │   ├── messagingAndRealtime.js
+│   │   └── reliabilityAndOperations.js
 │   ├── main.jsx                     # React entry point
 │   └── styles.css                   # Seluruh styling aplikasi
 ├── AGENTS.md                        # Aturan kerja AI/coding agent

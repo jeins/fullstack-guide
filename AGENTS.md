@@ -48,7 +48,7 @@ Materi utama menggunakan field:
 - `rule`
 - `code`
 
-Topik System Design Core berada di `src/coreSystemDesignConcepts.js`. Mapping diagram berada di `src/coreSystemDesignDiagrams.js`.
+Topik System Design Core dikelompokkan berdasarkan domain di `src/system-design-core/*.js`. `src/coreSystemDesignConcepts.js` hanya menjadi aggregator yang mempertahankan urutan ID. Mapping diagram berada di `src/coreSystemDesignDiagrams.js`.
 
 Saat menambahkan topik:
 
@@ -56,6 +56,7 @@ Saat menambahkan topik:
 2. Pastikan `section` cocok dengan learning track di `src/App.jsx`.
 3. Isi seluruh field penting; jangan meninggalkan placeholder.
 4. Pastikan search dapat menemukan istilah utama dan sinonim relevan.
+5. Tempatkan materi pada file domain yang paling relevan dan pertahankan aggregator tetap tipis.
 
 ## UI/UX
 
@@ -107,4 +108,3 @@ Untuk perubahan UI, cek:
 - tidak ada overflow horizontal.
 
 Laporkan secara ringkas file yang diubah, hasil build, dan hal yang belum diverifikasi.
-
