@@ -1,0 +1,18 @@
+export const coreSystemDesignDiagrams = {
+  C01: { src: '/diagrams/scalable-data-storage.svg', caption: 'Replica meningkatkan kapasitas read; shard membagi write dan storage.' },
+  C02: { src: '/diagrams/caching-architecture.svg', caption: 'Cache-aside dengan fallback ke source of truth dan invalidation saat write.' },
+  C03: { src: '/diagrams/load-balancing.svg', caption: 'Traffic dibagi hanya ke instance stateless yang siap melayani request.' },
+  C04: { src: '/diagrams/async-processing.svg', caption: 'Transactional outbox memisahkan commit bisnis dari publikasi event.' },
+  C05: { src: '/diagrams/database-scaling.svg', caption: 'Primary menangani write; replica melayani read dengan risiko replication lag.' },
+  C06: { src: '/diagrams/consensus-conflict.svg', caption: 'Quorum menjaga keputusan cluster; version metadata membantu rekonsiliasi konflik.' },
+  C07: { src: '/diagrams/reliability-failover.svg', caption: 'Health signal, failover, dan circuit breaker membatasi blast radius.' },
+  C08: { src: '/diagrams/cdn-edge.svg', caption: 'Edge cache melayani hit dekat pengguna; hanya miss yang mencapai origin.' },
+  C09: { src: '/diagrams/api-rate-management.svg', caption: 'Gateway menegakkan auth, routing, quota, dan rate limit sebelum backend.' },
+  C10: { src: '/diagrams/search-pipeline.svg', caption: 'CDC membangun search index terpisah dari database sumber.' },
+  C11: { src: '/diagrams/observability-security.svg', caption: 'Telemetry dikorelasikan dengan trace ID, sementara identity dan encryption melindungi request.' },
+  C12: { src: '/diagrams/performance-scalability.svg', caption: 'Scaling yang benar mengikuti bottleneck terukur, bukan hanya menambah instance aplikasi.' },
+  C13: { src: '/diagrams/distributed-transactions-time.svg', caption: '2PC mengejar atomicity; Saga memakai transaksi lokal dan kompensasi untuk mencapai consistency.' },
+  C14: { src: '/diagrams/messaging-backpressure.svg', caption: 'Queue, pub/sub, DLQ, dan backpressure mengendalikan aliran kerja asynchronous saat beban meningkat.' },
+  C15: { src: '/diagrams/realtime-communication.svg', caption: 'Pilih polling, SSE, atau WebSocket berdasarkan arah komunikasi dan kebutuhan interaksi.' },
+  C16: { src: '/diagrams/probabilistic-ai-retrieval.svg', caption: 'Bloom filter menghindari lookup sia-sia; RAG mengambil context relevan sebelum model menghasilkan jawaban.' },
+};
