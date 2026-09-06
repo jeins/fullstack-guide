@@ -9,7 +9,9 @@
     "preview": "vite preview --host 0.0.0.0 --port 1234"
   },
   "dependencies": {
+    "dompurify": "^3.4.14",
     "lucide-react": "^0.542.0",
+    "marked": "^18.0.11",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

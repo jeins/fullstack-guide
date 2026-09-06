@@ -10,15 +10,18 @@ Web app pembelajaran berbahasa Indonesia untuk memperkuat pemahaman API, backend
 - Diagram arsitektur SVG lokal yang ringan dan tajam di mobile.
 - Navigasi drawer dan layout mobile-first untuk long-form reading.
 - Next-topic navigation dan estimasi waktu baca.
+- Kurikulum Java 21 dinamis yang membaca Markdown, source, dan test langsung dari folder materi lokal.
+- Resume otomatis ke halaman terakhir melalui state JSON di server, dengan `localStorage` sebagai fallback browser.
 
 ## Teknologi
 
 - React 19
 - Vite 7
 - Lucide React
+- Marked + DOMPurify
 - CSS native
 
-Project ini tidak memerlukan database atau backend. Seluruh materi saat ini disimpan sebagai data JavaScript dan aset SVG lokal.
+Materi utama disimpan sebagai data JavaScript dan aset SVG lokal. Section Java menggunakan middleware read-only milik Vite untuk membaca sumber lokal secara on-demand; tidak memerlukan database dan tidak menyalin seluruh corpus ke initial bundle.
 
 ## Menjalankan Project
 
@@ -41,6 +44,16 @@ http://localhost:1234
 ```
 
 Jika aplikasi diakses melalui hostname publik saat menjalankan Vite, isi environment variable `API_GUIDE_ALLOWED_HOSTS` dengan daftar hostname yang dipisahkan koma.
+
+Secara default, sumber section Java dibaca dari `/root/Claude-senior-java-engineer`. Lokasinya dapat diubah tanpa mengedit kode:
+
+```bash
+JAVA_GUIDE_SOURCE=/path/to/Claude-senior-java-engineer npm run dev
+```
+
+State halaman terakhir secara default disimpan di `$XDG_STATE_HOME/api-guide/reading-state.json` (fallback: `/root/.local/state/api-guide/reading-state.json`). Lokasinya dapat diubah dengan `API_GUIDE_READING_STATE_FILE`. File ini merupakan runtime state dan tidak perlu dimasukkan ke Git.
+
+Implementasi ini memakai satu state global sederhana untuk penggunaan pribadi. Endpoint state tidak memiliki akun per pengguna; tambahkan autentikasi dan penyimpanan per-user sebelum aplikasi digunakan oleh banyak orang.
 
 ### Production build
 
@@ -73,6 +86,8 @@ api-guide/
 │   ├── App.jsx                      # UI, navigasi, dan materi utama
 │   ├── coreSystemDesignConcepts.js  # Aggregator materi System Design Core
 │   ├── coreSystemDesignDiagrams.js  # Mapping materi ke diagram
+│   ├── java/
+│   │   └── JavaGuide.jsx             # UI dan state reader Java dinamis
 │   ├── system-design-core/           # Materi core, dikelompokkan per domain
 │   │   ├── deliveryAndRetrieval.js
 │   │   ├── distributedData.js
@@ -86,6 +101,8 @@ api-guide/
 ├── package.json
 └── vite.config.js
 ```
+
+`vite.config.js` membangun katalog Java otomatis dari folder bernomor `01-*` sampai `45-*` dan menyediakan endpoint read-only untuk file `.md` serta `.java`. Validasi real path mencegah akses ke file di luar sumber tersebut.
 
 ## Struktur Materi
 
@@ -153,6 +170,10 @@ Kemudian cek minimal:
 - Istilah teknis yang umum dipakai industri dapat tetap menggunakan Bahasa Inggris agar tidak ambigu.
 - Materi harus menjelaskan alasan, trade-off, failure mode, dan implikasi operasional.
 - Diagram dalam repository ini dibuat sebagai aset orisinal untuk project, bukan salinan langsung dari gambar referensi eksternal.
+
+### Atribusi materi Java
+
+Materi pada section Java diadaptasi dari [Claude Senior Java Engineer](https://github.com/msorkhpar/Claude-senior-java-engineer) oleh `msorkhpar`, yang tersedia berdasarkan lisensi [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/). Atribusi yang sama ditampilkan di dalam reader Java.
 
 ## Backup ke GitHub
 

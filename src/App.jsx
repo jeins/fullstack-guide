@@ -12,11 +12,13 @@ import {
   ServerCog,
   Rocket,
   BrainCircuit,
+  Coffee,
   ArrowRight,
   CheckCircle2,
 } from 'lucide-react';
 import { coreSystemDesignConcepts } from './coreSystemDesignConcepts';
 import { coreSystemDesignDiagrams } from './coreSystemDesignDiagrams';
+import { JavaContent, JavaSidebar, useJavaGuide } from './java/JavaGuide';
 
 const learningSections = [
   {
@@ -67,6 +69,13 @@ const learningSections = [
     description: 'Best practices, senior thinking, dan pola jawaban interview backend + frontend.',
     icon: Lightbulb,
     accent: 'cyan',
+  },
+  {
+    id: 'java',
+    title: 'Java',
+    description: 'Kurikulum Java 21 lengkap: fundamentals, concurrency, design patterns, JVM, security, dan persistence.',
+    icon: Coffee,
+    accent: 'amber',
   },
 ];
 
@@ -1585,7 +1594,34 @@ const interviewSections = [
   },
 ];
 
-const allConcepts = [...apiConcepts, ...coreSystemDesignConcepts, ...systemDesignSections, ...batch3SystemDesignSections, ...batch4SystemDesignSections, ...interviewSections].map(enrichConcept);
+const javaSectionEntry = {
+  id: 'J00',
+  title: 'Java Curriculum',
+  category: 'JAVA',
+  section: 'java',
+  tag: 'java-21',
+  shortDesc: 'Kurikulum Java dinamis yang dibaca langsung dari materi lokal.',
+  detail: '',
+  springBoot: '',
+  comparison: '',
+  bestPractices: '',
+  pitfalls: '',
+  rule: '',
+  code: '',
+};
+
+const allConcepts = [...apiConcepts, ...coreSystemDesignConcepts, ...systemDesignSections, ...batch3SystemDesignSections, ...batch4SystemDesignSections, ...interviewSections, javaSectionEntry].map(enrichConcept);
+
+const READING_STATE_URL = '/api/reading-state';
+const READING_STATE_STORAGE_KEY = 'senior-fullstack-guide:last-page';
+
+function readBrowserReadingState() {
+  try {
+    return JSON.parse(localStorage.getItem(READING_STATE_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
 
 function CopyButton({ value }) {
   const [copied, setCopied] = useState(false);
@@ -1666,12 +1702,32 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(allConcepts[0].id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [pendingReadingState, setPendingReadingState] = useState(undefined);
+  const [readingStateReady, setReadingStateReady] = useState(false);
+  const javaGuide = useJavaGuide();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(READING_STATE_URL, { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error('Reading state unavailable');
+        return response.json();
+      })
+      .then(({ state }) => {
+        if (!cancelled) setPendingReadingState(state ?? readBrowserReadingState());
+      })
+      .catch(() => {
+        if (!cancelled) setPendingReadingState(readBrowserReadingState());
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredConcepts = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return allConcepts;
 
     return allConcepts.filter((item) => {
+      if (item.section === 'java') return true;
       const blob = [
         item.title,
         item.shortDesc,
@@ -1721,6 +1777,72 @@ export default function App() {
   const interviewLens = getInterviewLens(selected);
   const architectureDiagram = coreSystemDesignDiagrams[selected.id];
   const nextTopic = activeSectionItems[selectedIndexInSection] ?? null;
+  const isJavaSection = selectedSectionId === 'java';
+
+  useEffect(() => {
+    if (readingStateReady || pendingReadingState === undefined) return;
+    if (!pendingReadingState) {
+      setReadingStateReady(true);
+      return;
+    }
+
+    const targetSection = learningSections.find((section) => section.id === pendingReadingState.sectionId);
+    if (!targetSection) {
+      setReadingStateReady(true);
+      return;
+    }
+
+    if (targetSection.id === 'java') {
+      if (!javaGuide.manifest) return;
+      javaGuide.restoreState(pendingReadingState.java);
+      setSelectedSectionId('java');
+      setSelectedId(javaSectionEntry.id);
+    } else {
+      const targetTopic = allConcepts.find(
+        (item) => item.section === targetSection.id && item.id === pendingReadingState.topicId,
+      );
+      setSelectedSectionId(targetSection.id);
+      setSelectedId(targetTopic?.id ?? allConcepts.find((item) => item.section === targetSection.id)?.id ?? allConcepts[0].id);
+    }
+    setReadingStateReady(true);
+  }, [javaGuide.manifest, pendingReadingState, readingStateReady]);
+
+  useEffect(() => {
+    if (!readingStateReady) return undefined;
+    const state = {
+      sectionId: selectedSectionId,
+      topicId: isJavaSection ? null : selected.id,
+      java: isJavaSection && javaGuide.selectedModule ? {
+        moduleId: javaGuide.selectedModule.id,
+        view: javaGuide.view,
+        path: javaGuide.selectedPaths[javaGuide.view],
+      } : null,
+    };
+
+    localStorage.setItem(READING_STATE_STORAGE_KEY, JSON.stringify(state));
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      fetch(READING_STATE_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+        signal: controller.signal,
+      }).catch(() => {});
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [
+    readingStateReady,
+    selectedSectionId,
+    selected.id,
+    isJavaSection,
+    javaGuide.selectedModule?.id,
+    javaGuide.view,
+    javaGuide.selectedPaths,
+  ]);
 
   useEffect(() => {
     if (!sidebarOpen) return undefined;
@@ -1774,7 +1896,7 @@ export default function App() {
                     <span className="track-mini-icon"><Icon size={15} /></span>
                     <span>
                       <strong>{section.title}</strong>
-                      <small>{itemsBySection[section.id].length} topics</small>
+                      <small>{section.id === 'java' ? `${javaGuide.manifest?.modules.length ?? '…'} modules` : `${itemsBySection[section.id].length} topics`}</small>
                     </span>
                   </button>
                 );
@@ -1785,7 +1907,9 @@ export default function App() {
           <div className="sidebar-block compact">
             <div className="sidebar-label">Current track</div>
             <div className="nav-list">
-              {activeSectionItems.map((item) => (
+              {isJavaSection ? (
+                <JavaSidebar guide={javaGuide} query={query} onNavigate={() => setSidebarOpen(false)} />
+              ) : activeSectionItems.map((item) => (
                 <button
                   key={item.id}
                   className={`nav-item ${item.id === selected.id ? 'active' : ''}`}
@@ -1798,7 +1922,7 @@ export default function App() {
                   <span className="nav-desc">{item.shortDesc}</span>
                 </button>
               ))}
-              {!activeSectionItems.length && <div className="empty-mini">Tidak ada hasil untuk pencarian ini.</div>}
+              {!isJavaSection && !activeSectionItems.length && <div className="empty-mini">Tidak ada hasil untuk pencarian ini.</div>}
             </div>
           </div>
         </aside>
@@ -1809,11 +1933,12 @@ export default function App() {
               <Menu size={18} />
             </button>
             <div className="mobile-topic-context">
-              <strong>{selected.id}. {selected.title}</strong>
-              <small>{selectedIndexInSection}/{activeSectionItems.length} · ~{readingTime} menit</small>
+              <strong>{isJavaSection ? `${javaGuide.selectedModule?.id ?? 'Java'} · ${javaGuide.selectedModule?.title ?? 'Memuat kurikulum'}` : `${selected.id}. ${selected.title}`}</strong>
+              <small>{isJavaSection ? `${javaGuide.selectedModule?.lessons.length ?? 0} subtopik · Java 21` : `${selectedIndexInSection}/${activeSectionItems.length} · ~${readingTime} menit`}</small>
             </div>
           </div>
 
+          {isJavaSection ? <JavaContent guide={javaGuide} /> : <>
           <section className="reading-strip card-lite">
             <div className="reading-stat">
               <span>Now reading</span>
@@ -1885,6 +2010,7 @@ export default function App() {
               </button>
             </section>
           )}
+          </>}
         </main>
       </div>
     </div>
